@@ -115,17 +115,30 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
       params: { name: pokemon.name },
     })),
 
-    fallback: false,
+    fallback: "blocking",
   };
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const { name } = params as { name: string };
 
+  const pokemon = await getPokemonInfo(name);
+
+  if (!pokemon) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
   return {
     props: {
-      pokemon: await getPokemonInfo(name),
+      pokemon,
     },
+    //  TODO Incremental Static Regeneration actualiza los datos que puedan haber cambiado del end-point como precio, tallas...
+    revalidate: 86400, // dato numerico en segundos 86400 = 60 segundos * 60 minutos * 24 horas
   };
 };
 
